@@ -4,6 +4,10 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL ?? '')
 
 const TOKEN_STORAGE_KEY = 'finanzas_token';
 
+export function getAuthToken() {
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
 export function setAuthToken(token) {
   if (!token) {
     clearAuthToken();
@@ -66,7 +70,7 @@ function getErrorMessage(payload, status) {
 
 async function request(method, path, body) {
   const headers = new Headers({ Accept: 'application/json' });
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const token = getAuthToken();
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
@@ -82,6 +86,7 @@ async function request(method, path, body) {
 
   if (response.status === 401) {
     clearAuthToken();
+    window.dispatchEvent(new Event('finanzas:session-expired'));
   }
 
   const payload = await readResponse(response);

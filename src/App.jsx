@@ -1,27 +1,53 @@
-import { Button } from '@/components/ui/button';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
+import { HomePage } from '@/pages/HomePage';
+
+function GuestOnly({ children }) {
+  const { isAuthenticated } = useAuth();
+
+  return isAuthenticated ? <Navigate to="/" replace /> : children;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          <GuestOnly>
+            <LoginPage />
+          </GuestOnly>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <GuestOnly>
+            <RegisterPage />
+          </GuestOnly>
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
-    <>
-      <section className="bg-white dark:bg-gray-900 p-10 m-10">
-        <h1 className="text-3xl font-bold underline">
-          Empezando el proyecto!!!
-        </h1>
-        <button type="button" className="counter"></button>
-      </section>
-
-      <div className="flex gap-2 p-10 m-10">
-        <Button
-          onClick={() => alert('El botón funciona')}
-          className="rounded-full"
-        >
-          Probar botón
-        </Button>
-        <Button variant="destructive" className="rounded-full">
-          Secundario
-        </Button>
-      </div>
-    </>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 
