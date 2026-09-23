@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { AuthLoading } from '@/components/AuthLoading';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LoginPage } from '@/pages/LoginPage';
@@ -6,8 +7,9 @@ import { RegisterPage } from '@/pages/RegisterPage';
 import { HomePage } from '@/pages/HomePage';
 
 function GuestOnly({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, ready } = useAuth();
 
+  if (!ready) return <AuthLoading />;
   return isAuthenticated ? <Navigate to="/" replace /> : children;
 }
 

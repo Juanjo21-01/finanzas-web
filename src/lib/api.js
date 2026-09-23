@@ -1,25 +1,8 @@
+import { clearStoredSession, getStoredAuthToken } from '@/lib/secureSession';
+
 const API_BASE_URL = (import.meta.env.VITE_API_URL ?? '')
   .trim()
   .replace(/\/+$/, '');
-
-const TOKEN_STORAGE_KEY = 'finanzas_token';
-
-export function getAuthToken() {
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
-}
-
-export function setAuthToken(token) {
-  if (!token) {
-    clearAuthToken();
-    return;
-  }
-
-  localStorage.setItem(TOKEN_STORAGE_KEY, token);
-}
-
-export function clearAuthToken() {
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
-}
 
 function buildUrl(path) {
   if (!API_BASE_URL) {
@@ -70,7 +53,7 @@ function getErrorMessage(payload, status) {
 
 async function request(method, path, body) {
   const headers = new Headers({ Accept: 'application/json' });
-  const token = getAuthToken();
+  const token = await getStoredAuthToken();
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
@@ -85,7 +68,7 @@ async function request(method, path, body) {
   const response = await fetch(buildUrl(path), options);
 
   if (response.status === 401) {
-    clearAuthToken();
+    clearStoredSession();
     window.dispatchEvent(new Event('finanzas:session-expired'));
   }
 

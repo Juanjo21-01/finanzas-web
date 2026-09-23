@@ -285,6 +285,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .home-welcome > p:not(.eyebrow) { margin: 11px 0 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
 .home-session { display: flex; align-items: center; gap: 9px; margin-top: 35px; padding-top: 18px; color: #66766c; border-top: 1px solid #e8e9e2; font-family: 'JetBrains Mono Variable', monospace; font-size: 10px; letter-spacing: 0.04em; }
 .home-session .eyebrow-dot { width: 6px; height: 6px; background: #8fb650; box-shadow: 0 0 0 3px rgb(143 182 80 / 12%); }
+.auth-restoring { display: flex; min-height: 100vh; min-height: 100svh; align-items: center; justify-content: center; gap: 11px; color: #627067; background: var(--paper); font-size: 12px; }
+.restoring-mark { display: grid; width: 30px; height: 30px; place-items: center; color: var(--forest); background: var(--leaf); border-radius: 9px 9px 9px 2px; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 700; }
 
 @media (max-width: 880px) {
   .auth-page { grid-template-columns: minmax(300px, 0.84fr) minmax(420px, 1.16fr); }
