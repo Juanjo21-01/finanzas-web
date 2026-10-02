@@ -30,16 +30,33 @@ export function AuthProvider({ children }) {
 
     window.addEventListener('finanzas:session-expired', handleExpiredSession);
 
-    readStoredSession()
-      .then((session) => {
-        if (active) setUser(session?.user ?? null);
-      })
-      .catch(() => {
+    async function restoreSession() {
+      try {
+        const session = await readStoredSession();
+        if (!active) return;
+
+        if (!session) {
+          setUser(null);
+          return;
+        }
+
+        try {
+          const response = await api.get('auth/me');
+          if (active) setUser(response?.user ?? session.user);
+        } catch {
+          // A network/server error shouldn't discard a locally valid session.
+          // A 401 clears storage and emits finanzas:session-expired in api.js.
+          const currentSession = await readStoredSession();
+          if (active) setUser(currentSession?.user ?? null);
+        }
+      } catch {
         if (active) setUser(null);
-      })
-      .finally(() => {
+      } finally {
         if (active) setReady(true);
-      });
+      }
+    }
+
+    restoreSession();
 
     return () => {
       active = false;

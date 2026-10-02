@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoading } from '@/components/AuthLoading';
 
@@ -12,5 +12,5 @@ export function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  return children;
+  return children ?? <Outlet />;
 }
