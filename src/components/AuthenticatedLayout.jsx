@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import './AuthenticatedLayout.css';
 
 const sections = [
   { to: '/', label: 'Resumen', end: true, Icon: House },
@@ -26,7 +27,7 @@ export function AuthenticatedLayout() {
           <span>saldo<span className="brand-period">.</span></span>
         </Link>
 
-        <p className="sidebar-caption">TU ESPACIO FINANCIERO</p>
+        <p className="sidebar-caption">Información Financiera</p>
 
         <nav className="sidebar-navigation" aria-label="Navegación principal">
           {sections.map(({ to, label, end, Icon }) => (
@@ -46,8 +47,8 @@ export function AuthenticatedLayout() {
           <div className="sidebar-account">
             <span className="sidebar-avatar" aria-hidden="true">{userInitial}</span>
             <span className="sidebar-user-details">
-              <strong>{user?.name ?? 'Usuario'}</strong>
-              <span>{user?.email}</span>
+              <strong title={user?.name ?? 'Usuario'}>{user?.name ?? 'Usuario'}</strong>
+              <span title={user?.email}>{user?.email}</span>
             </span>
           </div>
           <button
@@ -56,6 +57,7 @@ export function AuthenticatedLayout() {
             onClick={logout}
             disabled={loading}
             aria-label={loading ? 'Cerrando sesión' : 'Cerrar sesión'}
+            title={loading ? 'Cerrando sesión' : 'Cerrar sesión'}
           >
             <SignOut weight="regular" aria-hidden="true" />
             <span>{loading ? 'Saliendo…' : 'Cerrar sesión'}</span>
