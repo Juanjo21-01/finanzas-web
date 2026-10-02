@@ -19,8 +19,8 @@ export function AuthenticatedLayout() {
   const initial = user?.name?.trim()?.charAt(0)?.toUpperCase() || 'U';
 
   return (
-    <div className="grid min-h-screen min-h-svh grid-cols-[256px_minmax(0,1fr)] bg-paper text-ink max-[760px]:grid-cols-1">
-      <aside className="sticky top-0 flex h-screen min-h-svh flex-col bg-forest px-[18px] pt-[31px] pb-5 text-[#eef2e9] max-[760px]:z-20 max-[760px]:grid max-[760px]:h-auto max-[760px]:grid-cols-[minmax(0,1fr)_auto] max-[760px]:grid-rows-[auto_auto] max-[760px]:gap-x-[10px] max-[760px]:gap-y-[13px] max-[760px]:px-5 max-[760px]:pt-[15px] max-[760px]:pb-[11px] max-[560px]:px-[13px]">
+    <div className="grid min-h-screen min-h-svh grid-cols-[256px_minmax(0,1fr)] bg-paper text-ink max-[760px]:flex max-[760px]:flex-col">
+      <aside className="sticky top-0 flex h-screen min-h-svh flex-col bg-forest px-[18px] pt-[31px] pb-5 text-[#eef2e9] max-[760px]:z-20 max-[760px]:grid max-[760px]:h-auto max-[760px]:min-h-0 max-[760px]:grid-cols-[minmax(0,1fr)_auto] max-[760px]:grid-rows-[auto_auto] max-[760px]:gap-x-[10px] max-[760px]:gap-y-[13px] max-[760px]:px-5 max-[760px]:pt-[15px] max-[760px]:pb-[11px] max-[560px]:px-[13px]">
         <Link
           className="mx-[10px] inline-flex w-fit items-center gap-[10px] self-start text-[21px] font-bold tracking-[-1.3px] text-[#f6f7ec] no-underline max-[760px]:col-start-1 max-[760px]:row-start-1 max-[760px]:my-auto max-[560px]:ml-[7px]"
           to="/"
