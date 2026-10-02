@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
   ArrowClockwise,
-  Check,
   FunnelSimple,
+  Plus,
   PencilSimple,
   Receipt,
   Trash,
-  X,
 } from '@phosphor-icons/react';
+import { ExpenseFormDialog } from '@/components/ExpenseFormDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -53,8 +53,8 @@ function formatDate(dateValue) {
   });
 }
 
-function readExpenseRows(response) {
-  // Laravel entrega las filas de la colección dentro de la propiedad `data`.
+function readCollectionRows(response) {
+  // Laravel entrega los registros de una colección dentro de la propiedad `data`.
   if (Array.isArray(response?.data)) return response.data;
   return Array.isArray(response) ? response : [];
 }
@@ -71,10 +71,13 @@ export function EgresosPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [retryCount, setRetryCount] = useState(0);
   const [mutationError, setMutationError] = useState('');
-  const [editingId, setEditingId] = useState(null);
-  const [editingDraft, setEditingDraft] = useState(null);
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [formExpense, setFormExpense] = useState(null);
+  const [formVersion, setFormVersion] = useState(0);
+  const [categories, setCategories] = useState([]);
+  const [categoriesState, setCategoriesState] = useState('idle');
+  const [categoriesError, setCategoriesError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -87,7 +90,7 @@ export function EgresosPage() {
       try {
         const response = await api.get(`egresos?${query.toString()}`);
         if (!active) return;
-        setExpenses(readExpenseRows(response));
+        setExpenses(readCollectionRows(response));
         setLoadState('success');
       } catch (requestError) {
         if (!active) return;
@@ -109,7 +112,6 @@ export function EgresosPage() {
     setMutationError('');
     setErrorMessage('');
     setLoadState('loading');
-    cancelEditing();
     setFilters({ year: yearInput, month: monthInput });
   }
 
@@ -119,65 +121,53 @@ export function EgresosPage() {
     setRetryCount((current) => current + 1);
   }
 
-  function startEditing(expense) {
-    setMutationError('');
-    setEditingId(expense.id);
-    setEditingDraft({
-      fecha: expense.fecha ?? '',
-      descripcion: expense.descripcion ?? '',
-      monto: String(expense.monto ?? ''),
-    });
-  }
-
-  function cancelEditing() {
-    setEditingId(null);
-    setEditingDraft(null);
-  }
-
-  async function saveEditing(event) {
-    event.preventDefault();
-    if (editingId === null || !editingDraft) return;
-
-    if (!editingDraft.descripcion.trim()) {
-      setMutationError('La descripción no puede quedar vacía.');
-      return;
-    }
-    if (!/^\d{1,10}(?:\.\d{1,2})?$/.test(editingDraft.monto)) {
-      setMutationError('El monto debe tener hasta 10 enteros y 2 decimales.');
-      return;
-    }
-
-    setSaving(true);
-    setMutationError('');
+  async function loadCategories() {
+    setCategoriesState('loading');
+    setCategoriesError('');
 
     try {
-      const response = await api.put(`egresos/${editingId}`, {
-        fecha: editingDraft.fecha,
-        descripcion: editingDraft.descripcion.trim(),
-        monto: editingDraft.monto,
-      });
-      const updatedExpense = response?.data ?? response;
-      setExpenses((current) => {
-        const updated = current
-          .map((expense) => (expense.id === editingId ? { ...expense, ...updatedExpense } : expense))
-          .filter((expense) => {
-            if (expense.id !== editingId) return true;
-            const yearMatches = String(expense.fecha ?? '').slice(0, 4) === filters.year;
-            const monthMatches = !filters.month
-              || String(expense.fecha ?? '').slice(5, 7) === filters.month.padStart(2, '0');
-            return yearMatches && monthMatches;
-          });
-
-        return updated.sort((first, second) => (
-          (second.fecha ?? '').localeCompare(first.fecha ?? '') || Number(second.id) - Number(first.id)
-        ));
-      });
-      cancelEditing();
+      const response = await api.get('categorias?tipo=egreso');
+      setCategories(readCollectionRows(response));
+      setCategoriesState('success');
     } catch (requestError) {
-      setMutationError(requestError.message || 'No se pudo guardar el egreso.');
-    } finally {
-      setSaving(false);
+      setCategoriesError(requestError.message || 'No se pudieron cargar las categorías.');
+      setCategoriesState('error');
     }
+  }
+
+  function openExpenseForm(expense = null) {
+    setMutationError('');
+    setFormExpense(expense);
+    setFormVersion((current) => current + 1);
+    setFormOpen(true);
+
+    if (categoriesState === 'idle' || categoriesState === 'error') loadCategories();
+  }
+
+  async function saveExpense(values) {
+    const isEditing = Boolean(formExpense?.id);
+    const response = isEditing
+      ? await api.put(`egresos/${formExpense.id}`, values)
+      : await api.post('egresos', values);
+    const savedExpense = response?.data ?? response;
+
+    setExpenses((current) => {
+      const withoutSavedExpense = current.filter((expense) => expense.id !== savedExpense.id);
+      const yearMatches = String(savedExpense.fecha ?? '').slice(0, 4) === filters.year;
+      const monthMatches = !filters.month
+        || String(savedExpense.fecha ?? '').slice(5, 7) === filters.month.padStart(2, '0');
+      const next = yearMatches && monthMatches
+        ? [...withoutSavedExpense, savedExpense]
+        : withoutSavedExpense;
+
+      return next.sort((first, second) => (
+        (second.fecha ?? '').localeCompare(first.fecha ?? '') || Number(second.id) - Number(first.id)
+      ));
+    });
+
+    setFormOpen(false);
+    setFormExpense(null);
+    setMutationError('');
   }
 
   async function deleteExpense(expense) {
@@ -193,7 +183,6 @@ export function EgresosPage() {
     try {
       await api.delete(`egresos/${expense.id}`);
       setExpenses((current) => current.filter((item) => item.id !== expense.id));
-      if (editingId === expense.id) cancelEditing();
     } catch (requestError) {
       setMutationError(requestError.message || 'No se pudo eliminar el egreso.');
     } finally {
@@ -202,77 +191,90 @@ export function EgresosPage() {
   }
 
   return (
-    <section className="expenses-page" aria-labelledby="expenses-title">
-      <div className="expenses-heading">
-        <div className="expenses-title-group">
-          <p className="eyebrow auth-eyebrow">CONTROL DE EGRESOS</p>
-          <h1 id="expenses-title">Tus egresos</h1>
-          <p>Revisa y organiza las salidas de dinero de tu cuenta.</p>
+    <section className="mx-auto w-full max-w-[1120px] pt-[70px] pb-[56px] max-[760px]:pt-[42px] max-[560px]:pt-[34px]" aria-labelledby="expenses-title">
+      <div className="mb-8 flex items-end justify-between gap-[30px] max-[760px]:mb-[22px] max-[760px]:flex-col max-[760px]:items-stretch max-[760px]:gap-[22px]">
+        <div>
+          <p className="m-0 font-mono text-[10px] leading-[1.6] font-semibold tracking-[0.085em] text-[#718274] uppercase">CONTROL DE EGRESOS</p>
+          <h1 id="expenses-title" className="mt-[11px] mb-2 font-[Georgia,Times_New_Roman,serif] text-[clamp(37px,4vw,52px)] leading-[1.05] font-normal tracking-[-0.055em] text-ink">Tus egresos</h1>
+          <p className="m-0 text-[13px] leading-[1.6] text-muted-copy">Revisa y organiza las salidas de dinero de tu cuenta.</p>
         </div>
 
-        <form className="expenses-filters" onSubmit={applyFilters}>
-          <label className="expenses-filter">
-            <span>Año</span>
-            <Input
-              aria-label="Año"
-              type="number"
-              min="1900"
-              max="2100"
-              inputMode="numeric"
-              value={yearInput}
-              onChange={(event) => setYearInput(event.target.value)}
-              required
-              disabled={saving || deletingId !== null}
-            />
-          </label>
-          <label className="expenses-filter">
-            <span>Mes</span>
-            <Select
-              aria-label="Mes"
-              value={monthInput}
-              onChange={(event) => setMonthInput(event.target.value)}
-              disabled={saving || deletingId !== null}
-            >
-              <option value="">Todo el año</option>
-              {monthOptions.map((month, index) => (
-                <option key={month} value={String(index + 1)}>{month}</option>
-              ))}
-            </Select>
-          </label>
-          <Button type="submit" className="expenses-filter-button" disabled={saving || deletingId !== null}>
-            <FunnelSimple aria-hidden="true" />
-            Filtrar
+        <div className="flex items-end gap-2 max-[760px]:self-start max-[760px]:flex-wrap max-[560px]:w-full max-[560px]:flex-col max-[560px]:items-stretch">
+          <form className="flex items-end gap-[9px] max-[560px]:grid max-[560px]:w-full max-[560px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]" onSubmit={applyFilters}>
+            <label className="grid gap-[6px] text-[10px] font-bold text-[#657168]">
+              <span>Año</span>
+              <Input
+                className="w-[130px] max-[560px]:w-full"
+                aria-label="Año"
+                type="number"
+                min="1900"
+                max="2100"
+                inputMode="numeric"
+                value={yearInput}
+                onChange={(event) => setYearInput(event.target.value)}
+                required
+                disabled={deletingId !== null}
+              />
+            </label>
+            <label className="grid gap-[6px] text-[10px] font-bold text-[#657168]">
+              <span>Mes</span>
+              <Select
+                className="w-[150px] max-[560px]:w-full"
+                aria-label="Mes"
+                value={monthInput}
+                onChange={(event) => setMonthInput(event.target.value)}
+                disabled={deletingId !== null}
+              >
+                <option value="">Todo el año</option>
+                {monthOptions.map((month, index) => (
+                  <option key={month} value={String(index + 1)}>{month}</option>
+                ))}
+              </Select>
+            </label>
+            <Button type="submit" className="h-[38px] self-end bg-leaf text-[#17352d] hover:bg-[#b9dc67]" disabled={deletingId !== null}>
+              <FunnelSimple aria-hidden="true" />
+              Filtrar
+            </Button>
+          </form>
+          <Button
+            type="button"
+            className="h-[38px] bg-forest text-[#f7f8f1] hover:bg-forest-light max-[560px]:w-full"
+            onClick={() => openExpenseForm()}
+            disabled={loadState === 'loading' || deletingId !== null}
+          >
+            <Plus aria-hidden="true" />
+            Nuevo egreso
           </Button>
-        </form>
+        </div>
       </div>
 
-      <Card className="expenses-card">
-        <CardHeader className="expenses-card-header">
+      <Card>
+        <CardHeader className="flex items-center justify-between gap-4 border-b border-[#e9eae3] px-[23px] py-5 max-[560px]:px-[15px] max-[560px]:py-[17px]">
           <div>
-            <p className="expenses-card-kicker">MOVIMIENTOS REGISTRADOS</p>
-            <h2>Detalle del período</h2>
+            <p className="mt-0 mb-[5px] font-mono text-[9px] tracking-[0.08em] text-[#859188]">MOVIMIENTOS REGISTRADOS</p>
+            <h2 className="m-0 text-[15px] font-semibold tracking-[-0.02em] text-[#25372e]">Detalle del período</h2>
           </div>
           {loadState === 'success' && (
-            <span className="expenses-count">
+            <span className="font-mono text-[10px] text-[#718075]">
               {expenses.length} {expenses.length === 1 ? 'registro' : 'registros'}
             </span>
           )}
         </CardHeader>
 
-        <CardContent className="expenses-card-content">
-          {mutationError && <p className="expenses-action-error" role="alert">{mutationError}</p>}
+        <CardContent>
+          {mutationError && <p className="mt-[14px] mx-4 mb-0 border-l-2 border-error-copy bg-[#faeae6] px-3 py-[10px] text-[11px] leading-[1.5] text-error-copy" role="alert">{mutationError}</p>}
 
           {loadState === 'loading' && (
-            <div className="expenses-state" role="status" aria-live="polite">
-              <span className="expenses-spinner" aria-hidden="true" />
-              <p>Cargando egresos…</p>
+            <div className="flex min-h-[220px] flex-col items-center justify-center gap-[9px] px-7 py-7 text-center text-[#748077] max-[560px]:px-[18px]" role="status" aria-live="polite">
+              <span className="size-[23px] animate-spin rounded-full border-2 border-[#dce5d3] border-t-[#61833e] motion-reduce:animate-none" aria-hidden="true" />
+              <p className="m-0 max-w-[420px] text-[12px] leading-[1.6]">Cargando egresos…</p>
             </div>
           )}
 
           {loadState === 'error' && (
-            <div className="expenses-state expenses-error-state" role="alert">
-              <p className="expenses-state-title">No pudimos cargar tus egresos</p>
-              <p>{errorMessage}</p>
+            <div className="flex min-h-[220px] flex-col items-center justify-center gap-[9px] px-7 py-7 text-center text-[#748077] [&>button]:mt-2 max-[560px]:px-[18px]" role="alert">
+              <p className="m-0 max-w-[420px] text-[15px] leading-[1.6] font-semibold text-error-copy">No pudimos cargar tus egresos</p>
+              <p className="m-0 max-w-[420px] text-[12px] leading-[1.6]">{errorMessage}</p>
               <Button
                 type="button"
                 variant="outline"
@@ -285,135 +287,88 @@ export function EgresosPage() {
           )}
 
           {loadState === 'success' && expenses.length === 0 && (
-            <div className="expenses-state expenses-empty-state">
-              <span className="expenses-empty-icon"><Receipt weight="light" aria-hidden="true" /></span>
-              <p className="expenses-state-title">Todavía no hay egresos</p>
-              <p>No hay movimientos en este período. Registra tu primer egreso de este período para empezar a llevar el control de tus gastos.</p>
+            <div className="flex min-h-[270px] flex-col items-center justify-center gap-[9px] px-7 py-7 text-center text-[#748077] max-[560px]:px-[18px]">
+              <span className="mb-[3px] grid size-[47px] place-items-center rounded-full bg-[#edf2e5] text-[22px] text-[#52725d]"><Receipt weight="light" aria-hidden="true" /></span>
+              <p className="m-0 max-w-[420px] text-[15px] leading-[1.6] font-semibold text-[#2e4036]">Todavía no hay egresos</p>
+              <p className="m-0 max-w-[420px] text-[12px] leading-[1.6]">No hay movimientos en este período. Registra tu primer egreso de este período para empezar a llevar el control de tus gastos.</p>
             </div>
           )}
 
           {loadState === 'success' && expenses.length > 0 && (
-            <form className="expenses-table-form" id="expense-edit-form" onSubmit={saveEditing}>
-              <Table className="expenses-table">
+            <>
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead>Categoría</TableHead>
                     <TableHead>Subcategoría</TableHead>
-                    <TableHead className="expenses-amount-heading">Monto</TableHead>
-                    <TableHead className="expenses-actions-heading">Acciones</TableHead>
+                    <TableHead className="text-right">Monto</TableHead>
+                    <TableHead className="w-[124px] text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {expenses.map((expense) => {
-                    const isEditing = editingId === expense.id;
                     const isDeleting = deletingId === expense.id;
 
                     return (
                       <TableRow key={expense.id}>
-                        <TableCell>
-                          {isEditing ? (
-                            <Input
-                              aria-label={`Fecha de ${expense.descripcion}`}
-                              type="date"
-                              value={editingDraft.fecha}
-                              onChange={(event) => setEditingDraft((current) => ({ ...current, fecha: event.target.value }))}
-                              required
-                              disabled={saving}
-                            />
-                          ) : formatDate(expense.fecha)}
-                        </TableCell>
-                        <TableCell className="expenses-description-cell">
-                          {isEditing ? (
-                            <Input
-                              aria-label={`Descripción de ${expense.descripcion}`}
-                              value={editingDraft.descripcion}
-                              onChange={(event) => setEditingDraft((current) => ({ ...current, descripcion: event.target.value }))}
-                              maxLength={150}
-                              required
-                              disabled={saving}
-                            />
-                          ) : expense.descripcion}
-                        </TableCell>
+                        <TableCell>{formatDate(expense.fecha)}</TableCell>
+                        <TableCell className="min-w-[180px] font-semibold text-[#26382e]">{expense.descripcion}</TableCell>
                         <TableCell>{expense.categoria?.nombre ?? '—'}</TableCell>
                         <TableCell>{expense.subcategoria?.nombre ?? '—'}</TableCell>
-                        <TableCell className="expenses-amount-cell">
-                          {isEditing ? (
-                            <Input
-                              aria-label={`Monto de ${expense.descripcion}`}
-                              type="number"
-                              min="0.01"
-                              step="0.01"
-                              value={editingDraft.monto}
-                              onChange={(event) => setEditingDraft((current) => ({ ...current, monto: event.target.value }))}
-                              required
-                              disabled={saving}
-                            />
-                          ) : formatCurrency(expense.monto)}
-                        </TableCell>
-                        <TableCell className="expenses-actions-cell">
-                          {isEditing ? (
-                            <div className="expenses-row-actions">
-                              <Button
-                                type="submit"
-                                size="sm"
-                                disabled={saving}
-                                aria-label="Guardar cambios"
-                                title="Guardar cambios"
-                              >
-                                <Check aria-hidden="true" />
-                                <span>{saving ? 'Guardando…' : 'Guardar'}</span>
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={cancelEditing}
-                                disabled={saving}
-                                aria-label="Cancelar edición"
-                                title="Cancelar edición"
-                              >
-                                <X aria-hidden="true" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="expenses-row-actions">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon-sm"
-                                className="expense-edit-button"
-                                onClick={() => startEditing(expense)}
-                                disabled={saving || deletingId !== null || editingId !== null}
-                                aria-label={`Editar ${expense.descripcion}`}
-                                title="Editar egreso"
-                              >
-                                <PencilSimple aria-hidden="true" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon-sm"
-                                onClick={() => deleteExpense(expense)}
-                                disabled={saving || deletingId !== null || editingId !== null}
-                                aria-label={`Eliminar ${expense.descripcion}`}
-                                title={isDeleting ? 'Eliminando…' : 'Eliminar egreso'}
-                              >
-                                {isDeleting ? <ArrowClockwise className="expenses-delete-spinner" aria-hidden="true" /> : <Trash aria-hidden="true" />}
-                              </Button>
-                            </div>
-                          )}
+                        <TableCell className="text-right font-mono text-[11px] font-semibold whitespace-nowrap text-[#244a39]">{formatCurrency(expense.monto)}</TableCell>
+                        <TableCell className="w-[124px] text-right">
+                          <div className="flex items-center justify-end gap-[5px]">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon-sm"
+                              className="text-[#375748]"
+                              onClick={() => openExpenseForm(expense)}
+                              disabled={deletingId !== null}
+                              aria-label={`Editar ${expense.descripcion}`}
+                              title="Editar egreso"
+                            >
+                              <PencilSimple aria-hidden="true" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon-sm"
+                              onClick={() => deleteExpense(expense)}
+                              disabled={deletingId !== null}
+                              aria-label={`Eliminar ${expense.descripcion}`}
+                              title={isDeleting ? 'Eliminando…' : 'Eliminar egreso'}
+                            >
+                              {isDeleting ? <ArrowClockwise className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <Trash aria-hidden="true" />}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
                   })}
                 </TableBody>
               </Table>
-            </form>
+            </>
           )}
         </CardContent>
       </Card>
+
+      <ExpenseFormDialog
+        key={formVersion}
+        open={formOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setFormExpense(null);
+        }}
+        expense={formExpense}
+        categories={categories}
+        categoriesState={categoriesState}
+        categoriesError={categoriesError}
+        onRetryCategories={loadCategories}
+        onSave={saveExpense}
+      />
     </section>
   );
 }

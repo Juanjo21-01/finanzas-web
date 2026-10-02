@@ -5,7 +5,7 @@ function Input({ className, type = 'text', ...props }) {
     <input
       data-slot="input"
       type={type}
-      className={cn('ui-input', className)}
+      className={cn('block h-[38px] min-w-0 rounded-[2px] border border-line bg-[#fffefa] px-[10px] text-[12px] text-ink hover:border-[#b8c2b3] focus:border-[#77934a] focus:outline-[3px] focus:outline-[rgb(132_169_58_/_13%)] placeholder:text-[#a4aaa4] aria-[invalid=true]:border-error-copy', className)}
       {...props}
     />
   );

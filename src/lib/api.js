@@ -75,7 +75,10 @@ async function request(method, path, body) {
   const payload = await readResponse(response);
 
   if (!response.ok) {
-    throw new Error(getErrorMessage(payload, response.status));
+    const requestError = new Error(getErrorMessage(payload, response.status));
+    requestError.status = response.status;
+    requestError.validationErrors = payload?.errors ?? {};
+    throw requestError;
   }
 
   return payload;
