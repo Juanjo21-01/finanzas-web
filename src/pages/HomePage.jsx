@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
+
+const DashboardExpensesByCategory = lazy(() => import('@/components/DashboardExpensesByCategory')
+  .then((module) => ({ default: module.DashboardExpensesByCategory })));
 
 export function HomePage() {
   const { user } = useAuth();
@@ -19,6 +23,9 @@ export function HomePage() {
         period={period}
         onPeriodChange={setPeriod}
       />
+      <Suspense fallback={<Skeleton className="mt-6 h-[300px] w-full" />}>
+        <DashboardExpensesByCategory key={`${period.year}-${period.month}`} period={period} />
+      </Suspense>
     </section>
   );
 }
