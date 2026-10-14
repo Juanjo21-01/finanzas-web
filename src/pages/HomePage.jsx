@@ -17,13 +17,13 @@ export function HomePage() {
   });
 
   return (
-    <section className="mx-auto w-full max-w-[1120px] pt-[70px] pb-[56px] max-[760px]:pt-[42px] max-[560px]:pt-[34px]" aria-labelledby="dashboard-title">
+    <section className="mx-auto w-full max-w-[1120px] pt-10 pb-14 md:pt-14" aria-labelledby="dashboard-title">
       <DashboardHeader
         name={user?.name?.split(' ')[0]}
         period={period}
         onPeriodChange={setPeriod}
       />
-      <Suspense fallback={<Skeleton className="mt-6 h-[300px] w-full" />}>
+      <Suspense fallback={<Skeleton className="mt-6 h-[300px] w-full rounded-xl" />}>
         <DashboardExpensesByCategory key={`${period.year}-${period.month}`} period={period} />
       </Suspense>
     </section>

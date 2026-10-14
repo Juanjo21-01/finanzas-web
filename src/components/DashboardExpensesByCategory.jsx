@@ -76,10 +76,10 @@ export function DashboardExpensesByCategory({ period }) {
   const chartMinWidth = Math.max(560, 160 + amountLabelWidth + 240);
 
   return (
-    <Card className="mt-6 border-border bg-card text-card-foreground" aria-labelledby={titleId}>
-      <CardHeader className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
-        <h2 id={titleId} className="m-0 text-sm font-semibold">Egresos por categoría</h2>
-        <p className="m-0 text-xs text-muted-foreground">{periodLabel}</p>
+    <Card className="mt-6" aria-labelledby={titleId}>
+      <CardHeader className="flex flex-wrap items-center justify-between gap-2 border-b border-renglon px-5 py-4">
+        <h2 id={titleId} className="m-0 text-lg font-semibold">Egresos por categoría</h2>
+        <p className="eyebrow m-0">{periodLabel}</p>
       </CardHeader>
 
       <CardContent className="p-5" aria-busy={loadState === 'loading'}>
@@ -88,9 +88,9 @@ export function DashboardExpensesByCategory({ period }) {
             <span className="sr-only">Consultando egresos de {periodLabel}.</span>
             {[80, 65, 50, 35].map((width) => (
               <div key={width} className="flex items-center gap-4" aria-hidden="true">
-                <Skeleton className="h-3 w-24 shrink-0 bg-muted" />
-                <Skeleton className="h-6 bg-muted" style={{ width: `${width}%` }} />
-                <Skeleton className="h-3 w-16 shrink-0 bg-muted" />
+                <Skeleton className="h-3 w-24 shrink-0" />
+                <Skeleton className="h-6" style={{ width: `${width}%` }} />
+                <Skeleton className="h-3 w-16 shrink-0" />
               </div>
             ))}
           </div>
@@ -99,8 +99,8 @@ export function DashboardExpensesByCategory({ period }) {
         {loadState === 'error' && (
           <div className="flex flex-wrap items-center justify-between gap-4" role="alert">
             <div>
-              <p className="m-0 text-sm font-semibold text-destructive">No pudimos obtener tus egresos</p>
-              <p className="mt-1 mb-0 text-xs text-muted-foreground">{errorMessage}</p>
+              <p className="m-0 text-sm font-semibold text-egreso">No pudimos obtener tus egresos</p>
+              <p className="mt-1 mb-0 text-sm text-tinta-suave">{errorMessage}</p>
             </div>
             <Button type="button" variant="outline" onClick={retryLoading}>
               <ArrowClockwise aria-hidden="true" />
@@ -142,7 +142,7 @@ export function DashboardExpensesByCategory({ period }) {
                     tickLine={false}
                     axisLine={false}
                     minTickGap={32}
-                    tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
+                    tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
                   />
                   <YAxis
                     type="category"
@@ -152,7 +152,7 @@ export function DashboardExpensesByCategory({ period }) {
                     axisLine={false}
                     interval={0}
                     width={160}
-                    tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                    tick={{ fill: 'var(--foreground)', fontSize: 13 }}
                   />
                   <ChartTooltip
                     cursor={{ fill: 'var(--muted)' }}
@@ -164,18 +164,18 @@ export function DashboardExpensesByCategory({ period }) {
                             {payload[0]?.payload?.nombre}
                           </span>
                         )}
-                        formatter={(value) => <span className="font-mono tabular-nums">{formatGTQ(value)}</span>}
+                        formatter={(value) => <span className="cifra">{formatGTQ(value)}</span>}
                       />
                     )}
                   />
-                  <Bar dataKey="total" fill="var(--color-total)" barSize={24} radius={[0, 3, 3, 0]} isAnimationActive={false}>
+                  <Bar dataKey="total" fill="var(--color-total)" barSize={24} radius={[0, 4, 4, 0]} isAnimationActive={false}>
                     <LabelList
                       dataKey="total"
                       position="right"
                       offset={10}
                       formatter={formatGTQ}
                       fill="var(--foreground)"
-                      className="font-mono text-[11px] tabular-nums"
+                      className="cifra text-xs"
                     />
                   </Bar>
                 </BarChart>

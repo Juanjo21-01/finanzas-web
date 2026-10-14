@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
-const expenseFieldClasses = 'grid min-w-0 content-start gap-[6px] [&_[data-slot=input]]:w-full [&_[data-slot=select]]:w-full [&_[data-slot=textarea]]:w-full [&>label]:text-[10px] [&>label]:font-bold [&>label]:text-[#39483f] [&>label>span]:text-[9px] [&>label>span]:font-normal [&>label>span]:text-[#8a938d]';
+const expenseFieldClasses = 'grid min-w-0 content-start gap-1.5 [&>label]:text-sm [&>label]:font-semibold [&>label]:text-tinta [&>label>span]:text-xs [&>label>span]:font-normal [&>label>span]:text-tinta-suave';
 
 function localDateValue() {
   const now = new Date();
@@ -48,7 +48,7 @@ function readSubcategories(value) {
 
 function FieldError({ id, children }) {
   if (!children) return null;
-  return <p className="m-0 text-[10px] leading-[1.45] text-error-copy" id={id} role="alert">{children}</p>;
+  return <p className="m-0 text-xs leading-snug text-egreso" id={id} role="alert">{children}</p>;
 }
 
 export function ExpenseFormDialog({
@@ -151,9 +151,9 @@ export function ExpenseFormDialog({
       aria-describedby="expense-dialog-description"
     >
       <DialogContent>
-        <DialogHeader className="flex items-start justify-between gap-5 border-b border-[#e9eae3] pb-[17px]">
+        <DialogHeader className="flex items-start justify-between gap-5 border-b border-renglon pb-4">
           <div>
-            <p className="mt-0 mb-[7px] font-mono text-[9px] tracking-[0.08em] text-[#859188]">MOVIMIENTO PERSONAL</p>
+            <p className="eyebrow mt-0 mb-1.5">MOVIMIENTO PERSONAL</p>
             <DialogTitle id="expense-dialog-title">
               {isEditing ? 'Editar egreso' : 'Nuevo egreso'}
             </DialogTitle>
@@ -167,7 +167,7 @@ export function ExpenseFormDialog({
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="text-[#68756c]"
+            className="text-tinta-suave"
             onClick={() => requestOpenChange(false)}
             disabled={saving}
             aria-label="Cerrar formulario"
@@ -176,10 +176,10 @@ export function ExpenseFormDialog({
           </Button>
         </DialogHeader>
 
-        <form className="mt-[19px]" onSubmit={handleSubmit} noValidate>
-          {submitError && <p className="mb-[14px] border-l-2 border-error-copy bg-[#faeae6] px-3 py-[10px] text-[11px] leading-[1.5] text-error-copy" role="alert">{submitError}</p>}
+        <form className="mt-5" onSubmit={handleSubmit} noValidate>
+          {submitError && <p className="mb-4 rounded-md border-l-4 border-egreso bg-egreso-suave px-3 py-2.5 text-sm leading-normal text-egreso" role="alert">{submitError}</p>}
 
-          <div className="grid grid-cols-2 gap-x-[14px] gap-y-4 max-[560px]:gap-x-[11px] max-[560px]:gap-y-[13px] max-[400px]:grid-cols-1">
+          <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
             <div className={`${expenseFieldClasses} col-span-full`}>
               <label htmlFor="expense-category">Categoría</label>
               <Select
@@ -199,20 +199,20 @@ export function ExpenseFormDialog({
                 ))}
               </Select>
               {categoriesState === 'error' && (
-                <div className="flex items-center justify-between gap-2 text-[10px] leading-[1.45] text-error-copy" id="expense-category-error" role="alert">
+                <div className="flex items-center justify-between gap-2 text-xs leading-snug text-egreso" id="expense-category-error" role="alert">
                   <span>{categoriesError}</span>
-                  <Button type="button" variant="link" size="sm" className="pl-[3px] text-error-copy" onClick={onRetryCategories} disabled={saving}>
+                  <Button type="button" variant="link" size="sm" className="pl-1 text-egreso" onClick={onRetryCategories} disabled={saving}>
                     Reintentar
                   </Button>
                 </div>
               )}
               {categoriesState === 'loading' && (
-                <p className="m-0 text-[10px] leading-[1.45] text-[#7e897f]" id="expense-category-error" role="status">
+                <p className="m-0 text-xs leading-snug text-tinta-suave" id="expense-category-error" role="status">
                   Cargando categorías…
                 </p>
               )}
               {categoriesState === 'success' && categories.length === 0 && (
-                <p className="m-0 text-[10px] leading-[1.45] text-[#7e897f]" id="expense-category-error">
+                <p className="m-0 text-xs leading-snug text-tinta-suave" id="expense-category-error">
                   No hay categorías de egreso disponibles para esta cuenta.
                 </p>
               )}
@@ -263,7 +263,7 @@ export function ExpenseFormDialog({
             <div className={expenseFieldClasses}>
               <label htmlFor="expense-amount">Monto</label>
               <div className="relative">
-                <span className="absolute top-1/2 left-[11px] z-[1] -translate-y-1/2 font-mono text-[11px] text-[#6b786d]" aria-hidden="true">Q</span>
+                <span className="absolute top-1/2 left-3 z-[1] -translate-y-1/2 font-mono text-sm text-tinta-suave" aria-hidden="true">Q</span>
                 <Input
                   className="pl-7"
                   id="expense-amount"
@@ -316,7 +316,7 @@ export function ExpenseFormDialog({
             </div>
           </div>
 
-          <DialogFooter className="mt-[23px] flex justify-end gap-2 border-t border-[#e9eae3] pt-4">
+          <DialogFooter className="mt-6 flex justify-end gap-2 border-t border-renglon pt-4">
             <Button
               type="button"
               variant="outline"
@@ -325,7 +325,7 @@ export function ExpenseFormDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={!canSave}>
+            <Button type="submit" variant="egreso" disabled={!canSave}>
               {saving ? 'Guardando…' : isEditing ? 'Guardar cambios' : 'Crear egreso'}
             </Button>
           </DialogFooter>

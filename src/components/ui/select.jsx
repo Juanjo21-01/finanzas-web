@@ -4,7 +4,7 @@ function Select({ className, ...props }) {
   return (
     <select
       data-slot="select"
-      className={cn('block h-[38px] min-w-0 rounded-[2px] border border-line bg-[#fffefa] px-[10px] text-[12px] text-ink hover:border-[#b8c2b3] focus:border-[#77934a] focus:outline-[3px] focus:outline-[rgb(132_169_58_/_13%)] aria-[invalid=true]:border-error-copy', className)}
+      className={cn('block h-10 w-full min-w-0 rounded-md border border-input bg-card px-3 text-sm text-foreground transition-[border-color,box-shadow] duration-150 placeholder:text-tinta-suave/70 hover:border-tinta-suave focus:border-ring focus:outline-none focus:shadow-[0_0_0_3px_color-mix(in_oklch,var(--color-ingreso),transparent_82%)] disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-destructive', className)}
       {...props}
     />
   );

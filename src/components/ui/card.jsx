@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 
 function Card({ className, ...props }) {
-  return <section data-slot="card" className={cn('overflow-hidden border border-line bg-[#fffefa] shadow-[0_16px_40px_rgb(25_40_34_/_4%)]', className)} {...props} />;
+  return <section data-slot="card" className={cn('overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-hoja', className)} {...props} />;
 }
 
 function CardHeader({ className, ...props }) {

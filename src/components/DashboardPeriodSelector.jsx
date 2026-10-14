@@ -1,13 +1,15 @@
 import { Select } from '@/components/ui/select';
 import { dashboardMonths, dashboardYears } from '@/lib/dashboardPeriod';
 
+const labelClasses = 'grid gap-1.5 text-xs font-semibold text-tinta-suave';
+
 export function DashboardPeriodSelector({ period, onPeriodChange }) {
   return (
-    <div className="flex items-end gap-[9px] max-[1100px]:self-start max-[560px]:grid max-[560px]:w-full max-[560px]:grid-cols-2">
-      <label className="grid gap-[6px] text-[10px] font-bold text-[#657168]">
+    <div className="grid grid-cols-2 gap-3 sm:flex sm:items-end">
+      <label className={labelClasses}>
         <span>Año</span>
         <Select
-          className="w-[100px] max-[560px]:w-full"
+          className="sm:w-28"
           value={period.year}
           onChange={(event) => onPeriodChange({ ...period, year: event.target.value })}
         >
@@ -16,10 +18,10 @@ export function DashboardPeriodSelector({ period, onPeriodChange }) {
           ))}
         </Select>
       </label>
-      <label className="grid gap-[6px] text-[10px] font-bold text-[#657168]">
+      <label className={labelClasses}>
         <span>Mes</span>
         <Select
-          className="w-[150px] max-[560px]:w-full"
+          className="sm:w-40"
           value={period.month}
           onChange={(event) => onPeriodChange({ ...period, month: event.target.value })}
         >
