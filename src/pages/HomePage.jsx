@@ -6,6 +6,9 @@ import { useAuth } from '@/context/AuthContext';
 const DashboardExpensesByCategory = lazy(() => import('@/components/DashboardExpensesByCategory')
   .then((module) => ({ default: module.DashboardExpensesByCategory })));
 
+const DashboardAnnualEvolution = lazy(() => import('@/components/DashboardAnnualEvolution')
+  .then((module) => ({ default: module.DashboardAnnualEvolution })));
+
 export function HomePage() {
   const { user } = useAuth();
   const [period, setPeriod] = useState(() => {
@@ -25,6 +28,9 @@ export function HomePage() {
       />
       <Suspense fallback={<Skeleton className="mt-6 h-[300px] w-full rounded-xl" />}>
         <DashboardExpensesByCategory key={`${period.year}-${period.month}`} period={period} />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="mt-6 h-[300px] w-full rounded-xl" />}>
+        <DashboardAnnualEvolution key={period.year} year={period.year} />
       </Suspense>
     </section>
   );
